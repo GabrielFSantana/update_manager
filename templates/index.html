@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Gerenciador de Atualizações</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <h1>Gerenciador de Atualizações</h1>
+
+    <!-- Filtro por status -->
+    <div style="text-align: center; margin-bottom: 20px;">
+        <form method="GET" action="/">
+            <label for="filtro">Filtrar por status:</label>
+            <select name="filtro" id="filtro" onchange="this.form.submit()">
+                <option value="todos" {% if filtro == 'todos' %}selected{% endif %}>Todos</option>
+                <option value="pendentes" {% if filtro == 'pendentes' %}selected{% endif %}>Pendentes</option>
+                <option value="andamento" {% if filtro == 'andamento' %}selected{% endif %}>Em andamento</option>
+                <option value="pausado" {% if filtro == 'pausado' %}selected{% endif %}>Pausado</option>
+                <option value="concluido" {% if filtro == 'concluido' %}selected{% endif %}>Concluídos</option>
+            </select>
+        </form>
+    </div>
+
+    <!-- Formulário Cliente -->
+    <h2>Adicionar Cliente</h2>
+    <form action="/add_cliente" method="POST">
+        <input type="text" name="nome" placeholder="Nome do Cliente" required>
+        <input type="text" name="sistema" placeholder="Sistema" required>
+        <button type="submit">Adicionar</button>
+    </form>
+
+    <!-- Formulário Analista -->
+    <h2>Adicionar Analista</h2>
+    <form action="/add_analista" method="POST">
+        <input type="text" name="nome" placeholder="Nome do Analista" required>
+        <button type="submit">Adicionar</button>
+    </form>
+
+    <!-- Formulário Atualização -->
+    <h2>Atribuir Atualização</h2>
+    <form action="/atribuir_atualizacao" method="POST">
+        <label>Cliente:</label>
+        <select name="cliente_id" required>
+            {% for cliente in clientes if not cliente.atualizacao %}
+                <option value="{{ cliente.id }}">{{ cliente.nome }} - {{ cliente.sistema }}</option>
+            {% endfor %}
+        </select>
+
+        <label>Analista:</label>
+        <select name="analista_id" required>
+            {% for analista in analistas %}
+                <option value="{{ analista.id }}">{{ analista.nome }}</option>
+            {% endfor %}
+        </select>
+
+        <button type="submit">Atribuir</button>
+    </form>
+
+    <!-- Tabela Atualizações -->
+    <h2>Atualizações</h2>
+    <table>
+        <tr>
+            <th>Cliente</th>
+            <th>Sistema</th>
+            <th>Analista</th>
+            <th>Status</th>
+            <th>Data Conclusão</th>
+        </tr>
+        {% for att in atualizacoes %}
+        <tr>
+            <td>{{ att.cliente.nome }}</td>
+            <td>{{ att.cliente.sistema }}</td>
+            <td>{{ att.analista.nome if att.analista else 'Não atribuído' }}</td>
+            <td>
+                <form action="/atualizar_status/{{ att.id }}" method="POST">
+                    <select name="status" onchange="this.form.submit()">
+                        <option value="Pendente" {% if att.status == 'Pendente' %}selected{% endif %}>Pendente</option>
+                        <option value="Em andamento" {% if att.status == 'Em andamento' %}selected{% endif %}>Em andamento</option>
+                        <option value="Pausado" {% if att.status == 'Pausado' %}selected{% endif %}>Pausado</option>
+                        <option value="Concluído" {% if att.status == 'Concluído' %}selected{% endif %}>Concluído</option>
+                    </select>
+                </form>
+            </td>
+            <td>
+                {% if att.data_conclusao %}
+                    {{ att.data_conclusao.strftime('%d/%m/%Y %H:%M') }}
+                {% else %}
+                    -
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
